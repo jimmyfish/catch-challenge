@@ -41,15 +41,13 @@ class DataManipulation extends AbstractController
         return substr($file->getFileName(), 0, strlen($file->getFilename()) - strlen($file->getExtension()) - 1);
     }
 
-    public function convertToCsv($files, $outputDir)
+    public function convertToCsv($files, $output)
     {
-        $filename = $outputDir . "/challenge-1-in.csv";
+        $ff = fopen($files, "r");
+        $w = fopen($output, "w+");
 
-        $ff = fopen($this->getTemporaryDir()."/challenge-1-in.jsonl", "r");
-        $w = fopen($filename, "w+");
-
-        if (!$this->filesystem->exists($outputDir)) {
-            $this->filesystem->mkdir($outputDir);
+        if (!$this->filesystem->exists($output)) {
+            $this->filesystem->mkdir($output);
         }
 
         $csvkeys = [
@@ -64,10 +62,9 @@ class DataManipulation extends AbstractController
 
         $csvitem = [];
 
-        fputcsv($w, $csvkeys, $delimiter = ";");
+        fputcsv($w, $csvkeys, $delimiter = ",");
 
         while ($json = fgets($ff)) {
-
             $items = json_decode($json, false);
 
             $data = [
@@ -88,7 +85,7 @@ class DataManipulation extends AbstractController
             foreach ($item as $itm) {
                 fwrite($w, "$itm");
                 if ($itm !== $last) {
-                    fwrite($w, ";");
+                    fwrite($w, ",");
                 }
             }
             fwrite($w, "\n");
