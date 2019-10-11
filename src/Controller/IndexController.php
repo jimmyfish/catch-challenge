@@ -56,23 +56,30 @@ class IndexController extends AbstractController
             }
         }
 
-        $response = $this->dataInput
-            ->{$request->get('filetype')}(
-                $temporaryFolder . "/inputs/" . $filename . ".jsonl",
-                $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype')
-            );
-
         if (!is_null($request->get('db')) && $request->get('db') !== 0) {
-            if ($request->get('db') !== 1) {
+            if ((int)$request->get('db') !== 1) {
                 return new JsonResponse(["error" => ["message" => "parameter not valid"]]);
             }
         }
 
+        $response = $this->dataInput
+            ->{$request->get('filetype')}(
+                $temporaryFolder . "/inputs/" . $filename . ".jsonl",
+                $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype'),
+                $request->get('db')
+            );
+
         if ($response) {
-            return new JsonResponse([
+            $message = [
                 "message" => "success",
-                "filename" => $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype'),
-            ]);
+                "filename" => $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype')
+            ];
+
+            if ((int)$request->get('db') === 1) {
+                $message['batch_number'] = $response;
+            }
+
+            return new JsonResponse($message);
         } else {
             return new JsonResponse([
                 "message" => "Something went wrong",
