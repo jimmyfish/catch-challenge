@@ -9,4 +9,6 @@ Challenge v1
 
 **Getting things ready**
 
+Installing any dependency needed for project
+
 ` composer install `
