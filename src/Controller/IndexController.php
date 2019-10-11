@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Controller\Data\DataInput;
 use App\Controller\Data\DataManipulation;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,14 +18,21 @@ class IndexController extends AbstractController
 {
     private $dataManipulation;
     private $filesystem;
+    private $dataInput;
+    private $supportedFiletype = [
+        "csv",
+        "yaml",
+    ];
 
     public function __construct(
         DataManipulation $dataManipulation,
+        DataInput $dataInput,
         Filesystem $filesystem
     )
     {
         $this->dataManipulation = $dataManipulation;
         $this->filesystem = $filesystem;
+        $this->dataInput = $dataInput;
     }
 
     /**
@@ -42,20 +50,34 @@ class IndexController extends AbstractController
 
         $temporaryFolder = $this->dataManipulation->getTemporaryDir();
 
-        if ($request->get('filetype') === "csv" || is_null($request->get('filetype'))) {
-            $this->dataManipulation
-                ->convertToCsv(
-                    $temporaryFolder . "/inputs/" . $filename . ".jsonl",
-                    $this->dataManipulation->getResultDir() . "/" . $filename . ".csv"
-                );
-        } else {
-            return new JsonResponse(['error' => ['message' => 'filetype not supported']]);
+        if (!is_null($request->get('filetype'))) {
+            if (!in_array($request->get('filetype'), $this->supportedFiletype)) {
+                return new JsonResponse(['error' => ['message' => 'filetype not supported']]);
+            }
         }
 
-        return new JsonResponse([
-            "message" => "success",
-            "filename" => $this->dataManipulation->getResultDir() . "/" . $filename . ".csv"
-        ]);
+        $response = $this->dataInput
+            ->{$request->get('filetype')}(
+                $temporaryFolder . "/inputs/" . $filename . ".jsonl",
+                $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype')
+            );
+
+        if (!is_null($request->get('db')) && $request->get('db') !== 0) {
+            if ($request->get('db') !== 1) {
+                return new JsonResponse(["error" => ["message" => "parameter not valid"]]);
+            }
+        }
+
+        if ($response) {
+            return new JsonResponse([
+                "message" => "success",
+                "filename" => $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype'),
+            ]);
+        } else {
+            return new JsonResponse([
+                "message" => "Something went wrong",
+            ]);
+        }
     }
 
     public function getFile(Request $request)
