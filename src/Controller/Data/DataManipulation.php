@@ -28,46 +28,34 @@ class DataManipulation extends AbstractController
 
     public function getTemporaryDir()
     {
+        if (!$this->filesystem->exists($this->getKernelProjectDir() . "/var/tmp")) {
+            $this->filesystem->mkdir($this->getKernelProjectDir() . "/var/tmp");
+        }
+
         return $this->getKernelProjectDir() . "/var/tmp";
     }
 
     public function getResultDir()
     {
+        if (!$this->filesystem->exists($this->getTemporaryDir() . "/results")) {
+            $this->filesystem->mkdir($this->getTemporaryDir() . "/results");
+        }
         return $this->getTemporaryDir() . "/results";
     }
 
-    public function generateNewName($file)
+    public function getData($files)
     {
-        return substr($file->getFileName(), 0, strlen($file->getFilename()) - strlen($file->getExtension()) - 1);
-    }
+        $data = [];
 
-    public function convertToCsv($files, $output)
-    {
         $ff = fopen($files, "r");
-        $w = fopen($output, "w+");
-
-        if (!$this->filesystem->exists($output)) {
-            $this->filesystem->mkdir($output);
-        }
-
-        $csvkeys = [
-            "order_id",
-            "order_datetime",
-            "total_order_value",
-            "average_unit_price",
-            "distinct_unit_count",
-            "total_units_count",
-            "customer_state"
-        ];
-
-        $csvitem = [];
-
-        fputcsv($w, $csvkeys, $delimiter = ",");
-
         while ($json = fgets($ff)) {
             $items = json_decode($json, false);
 
-            $data = [
+            if ($this->calculateTotalOrderValue($items) !== 0) {
+                continue;
+            }
+
+            $collections = [
                 'order_id' => $items->order_id,
                 'order_datetime' => $this->orderDate($items),
                 'total_order_value' => $this->calculateTotalOrderValue($items),
@@ -77,19 +65,10 @@ class DataManipulation extends AbstractController
                 'customer_state' => str_replace('"', '', $items->customer->shipping_address->state),
             ];
 
-            array_push($csvitem, $data);
+            array_push($data, $collections);
         }
 
-        foreach ($csvitem as $item) {
-            $last = end($item);
-            foreach ($item as $itm) {
-                fwrite($w, "$itm");
-                if ($itm !== $last) {
-                    fwrite($w, ",");
-                }
-            }
-            fwrite($w, "\n");
-        }
+        return $data;
     }
 
     public function orderDate($items)
@@ -128,20 +107,22 @@ class DataManipulation extends AbstractController
     {
         $result = 0;
 
-        foreach ($items->items as $item) {
-            $result += $item->unit_price * $item->quantity;
-        }
+        if (!is_null($items->item)) {
+            foreach ($items->items as $item) {
+                $result += $item->unit_price * $item->quantity;
+            }
 
-        if (!empty($items->discounts)) {
-            usort($items->discounts, function ($a, $b) {
-                return strcmp($a->priority, $b->priority);
-            });
+            if (!empty($items->discounts)) {
+                usort($items->discounts, function ($a, $b) {
+                    return strcmp($a->priority, $b->priority);
+                });
 
-            foreach ($items->discounts as $discount) {
-                if ($discount->type === "PERCENTAGE") {
-                    $result = $result - (($discount->value / 100) * $result);
-                } else {
-                    $result = $result - $discount->value;
+                foreach ($items->discounts as $discount) {
+                    if ($discount->type === "PERCENTAGE") {
+                        $result = $result - (($discount->value / 100) * $result);
+                    } else {
+                        $result = $result - $discount->value;
+                    }
                 }
             }
         }
