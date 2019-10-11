@@ -3,14 +3,8 @@
 namespace App\Controller\Data;
 
 use DateTime;
-use Exception;
-use RecursiveIteratorIterator;
-use RecursiveArrayIterator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 
 class DataManipulation extends AbstractController
 {
@@ -51,7 +45,7 @@ class DataManipulation extends AbstractController
         while ($json = fgets($ff)) {
             $items = json_decode($json, false);
 
-            if ($this->calculateTotalOrderValue($items) !== 0) {
+            if ($this->calculateTotalOrderValue($items) === 0) {
                 continue;
             }
 
@@ -107,7 +101,7 @@ class DataManipulation extends AbstractController
     {
         $result = 0;
 
-        if (!is_null($items->item)) {
+        if (!is_null($items->items)) {
             foreach ($items->items as $item) {
                 $result += $item->unit_price * $item->quantity;
             }
