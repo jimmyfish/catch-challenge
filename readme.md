@@ -6,12 +6,31 @@ killcoder212@gmail.com
 
 Challenge v1
 ---
+This project is build with symfony skeleton version 4.3 (minimum installation) using design pattern concept for easy maintain for long term project.
+
+```
+Library list :
+- symfony/orm-pack
+- symfony/yaml
+- symfony/http-client
+- doctrine/annotations
+- symfony/finder
+```
 
 **Getting things ready**
 
 Installing any dependency needed for project
 
 ` composer install `
+
+Configuring database
+
+1. Open your .env file
+2. Change the configuration based on your database config  
+    change line `DATABASE_URL=mysql://user:password@127.0.0.1:3306/dbname`
+3. Run migration
+    `php bin/console migrate`
+4. Enjoy with a cup of coffee ~
 
 **API Endpoint**
 
@@ -25,9 +44,15 @@ Installing any dependency needed for project
     optional parameter :
     - `filetype` Specify the output filetype, (available options : `*.csv`, `*.yaml`) . default filetype is `*.csv`
     
+    - `db` Save output into database (available options : `0, 1`) default option is `0`
+    
     usage example :
     
     `/convert?src=http://someexample.website/data/input.jsonl` This will output the file with `*.csv` filetype
     
     `/convert?src=http://someexample.website/data/input.jsonl&filetype=yaml` This will output the file with `*.yaml` filetype
     
+- Get inserted data  
+when you give `db` parameter set to `1`, you will get batch number on json response, this number can be used for get the data from database.
+
+    `/get/{batch_number}` - change `batch_number` with given batch number in json response.
