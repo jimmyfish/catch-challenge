@@ -30,7 +30,8 @@ Configuring database
     change line `DATABASE_URL=mysql://user:password@127.0.0.1:3306/dbname`
 3. Run migration
     `php bin/console migrate`
-4. Enjoy with a cup of coffee ~
+4. Run your server with `php bin/console server:run`  or config with valet `valet link`
+5. Enjoy with a cup of coffee ~
 
 **API Endpoint**
 
