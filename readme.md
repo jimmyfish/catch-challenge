@@ -46,11 +46,17 @@ Configuring database
     
     - `db` Save output into database (available options : `0, 1`) default option is `0`
     
+    - `email` Email result to specific email `example : &email=example@site.com`
+    
     usage example :
     
     `/convert?src=http://someexample.website/data/input.jsonl` This will output the file with `*.csv` filetype
     
     `/convert?src=http://someexample.website/data/input.jsonl&filetype=yaml` This will output the file with `*.yaml` filetype
+    
+    `http://catch.test/convert?src=https://s3-ap-southeast-2.amazonaws.com/catch-code-challenge/challenge-1-in.jsonl&filetype=yaml&db=1&email=killcoder212@gmail.com`  
+    
+    This will output the file with `*.yaml` filetype and save to database, and also will send to `killcoder212@gmail.com` with `*.yaml` file attach.
     
 - Get inserted data  
 when you give `db` parameter set to `1`, you will get batch number on json response, this number can be used for get the data from database.
