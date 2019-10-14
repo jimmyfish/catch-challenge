@@ -23,16 +23,19 @@ class IndexController extends AbstractController
         "csv",
         "yaml",
     ];
+    private $sendResult;
 
     public function __construct(
         DataManipulation $dataManipulation,
         DataInput $dataInput,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        SendResultAction $sendResult
     )
     {
         $this->dataManipulation = $dataManipulation;
         $this->filesystem = $filesystem;
         $this->dataInput = $dataInput;
+        $this->sendResult = $sendResult;
     }
 
     /**
@@ -70,6 +73,10 @@ class IndexController extends AbstractController
             );
 
         if ($response) {
+            if (!is_null($request->get('email'))) {
+                $this->sendResult->send($request->get('email'), $filename . "." . $request->get('filetype'));
+            }
+
             $message = [
                 "message" => "success",
                 "filename" => $this->dataManipulation->getResultDir() . "/" . $filename . "." . $request->get('filetype')
